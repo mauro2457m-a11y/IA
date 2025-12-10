@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Message, MessageRole } from './types';
 import { ChatBubble } from './components/ChatBubble';
 import { InputBar } from './components/InputBar';
 import { runQuery } from './services/geminiService';
 import { SparklesIcon } from './components/icons/SparklesIcon';
+import { ApiKeyScreen } from './components/ApiKeyScreen';
 
 const App: React.FC = () => {
+  const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem('gemini-api-key'));
   const [messages, setMessages] = useState<Message[]>([
     {
       role: MessageRole.MODEL,
@@ -18,6 +19,11 @@ const App: React.FC = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
+  const handleKeySubmit = (key: string) => {
+    localStorage.setItem('gemini-api-key', key);
+    setApiKey(key);
   };
 
   useEffect(() => {
@@ -39,7 +45,7 @@ const App: React.FC = () => {
   };
 
   const handleSend = async (prompt: string, imageFile?: File) => {
-    if (isLoading || (!prompt && !imageFile)) return;
+    if (isLoading || (!prompt && !imageFile) || !apiKey) return;
 
     setIsLoading(true);
 
@@ -73,7 +79,7 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      const aiResponse = await runQuery(prompt, imagePayload);
+      const aiResponse = await runQuery(prompt, apiKey, imagePayload);
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error("Error from Gemini API:", error);
@@ -89,6 +95,10 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (!apiKey) {
+    return <ApiKeyScreen onKeySubmit={handleKeySubmit} />;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">

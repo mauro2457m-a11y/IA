@@ -1,14 +1,10 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message, MessageRole } from '../types';
 
-const API_KEY = process.env.API_KEY;
-let ai: GoogleGenAI | undefined;
-
-if (API_KEY) {
-  ai = new GoogleGenAI({ apiKey: API_KEY });
-} else {
-  console.error("API_KEY environment variable is not set.");
-}
+// Helper function to create an instance on demand
+const getAiInstance = (apiKey: string) => {
+  return new GoogleGenAI({ apiKey });
+};
 
 
 const GENERATION_KEYWORDS = ['gere', 'crie uma imagem', 'desenhe', 'ilustre', 'faça uma imagem', 'gera', 'cria uma imagem'];
@@ -18,13 +14,15 @@ const isGenerationRequest = (prompt: string): boolean => {
     return GENERATION_KEYWORDS.some(keyword => lowerCasePrompt.includes(keyword));
 };
 
-export const runQuery = async (prompt: string, image?: { data: string; mimeType: string }): Promise<Message> => {
-  if (!ai) {
+export const runQuery = async (prompt: string, apiKey: string, image?: { data: string; mimeType: string }): Promise<Message> => {
+  if (!apiKey) {
     return {
       role: MessageRole.ERROR,
-      text: "A chave da API do Google não está configurada. Verifique as variáveis de ambiente.",
+      text: "A chave da API do Google não foi fornecida. Por favor, configure-a para continuar.",
     };
   }
+
+  const ai = getAiInstance(apiKey);
 
   try {
     if (isGenerationRequest(prompt) && !image) {
