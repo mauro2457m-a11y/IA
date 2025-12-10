@@ -1,11 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message, MessageRole } from '../types';
-
-// Helper function to create an instance on demand
-const getAiInstance = (apiKey: string) => {
-  return new GoogleGenAI({ apiKey });
-};
-
 
 const GENERATION_KEYWORDS = ['gere', 'crie uma imagem', 'desenhe', 'ilustre', 'faça uma imagem', 'gera', 'cria uma imagem'];
 
@@ -22,9 +15,10 @@ export const runQuery = async (prompt: string, apiKey: string, image?: { data: s
     };
   }
 
-  const ai = getAiInstance(apiKey);
-
   try {
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
+
     if (isGenerationRequest(prompt) && !image) {
       // Image Generation
       const model = 'gemini-2.5-flash-image';
@@ -67,7 +61,7 @@ export const runQuery = async (prompt: string, apiKey: string, image?: { data: s
         contents.parts.push({ text: prompt });
       }
 
-      const response: GenerateContentResponse = await ai.models.generateContent({
+      const response = await ai.models.generateContent({
           model,
           contents,
       });
