@@ -8,7 +8,7 @@ export type CreationType = 'COURSE' | 'EBOOK';
 interface CreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (prompt: string) => void;
+  onSubmit: (textPrompt: string, imagePrompt: string, userTitle: string) => void;
 }
 
 export const CreationModal: React.FC<CreationModalProps> = ({ isOpen, onClose, onSubmit }) => {
@@ -23,34 +23,55 @@ export const CreationModal: React.FC<CreationModalProps> = ({ isOpen, onClose, o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let prompt = '';
+    let textPrompt = '';
+    let imagePrompt = '';
+    let userTitle = '';
+
+    const safeStyle = style || 'Profissional e moderno';
 
     if (type === 'COURSE') {
-      prompt = `Atue como um especialista em design instrucional e educação.
-Crie uma ESTRUTURA COMPLETA DE CURSO sobre o tema: "${topic}".
+      userTitle = `Criar Curso sobre: ${topic}`;
+      
+      // Prompt para a Capa do Curso
+      imagePrompt = `Crie uma imagem promocional de alta qualidade, estilo capa de curso online, sobre o tema: "${topic}". Estilo visual: ${safeStyle}. Sem texto escrito na imagem, apenas arte visual representativa.`;
+
+      // Prompt para o Conteúdo do Curso
+      textPrompt = `Atue como um especialista em design instrucional e educação.
+Crie uma ESTRUTURA COMPLETA E DETALHADA DE CURSO sobre o tema: "${topic}".
 Público-alvo: "${targetAudience}".
-Tom/Estilo: "${style || 'Profissional e didático'}".
+Tom/Estilo: "${safeStyle}".
+
+REQUISITO OBRIGATÓRIO: O curso deve ter NO MÍNIMO 10 MÓDULOS.
 
 A resposta deve ser formatada em Markdown e incluir:
 1. Título do Curso (Cativante).
 2. Descrição e Objetivos de Aprendizado.
-3. Estrutura de Módulos (Mínimo 5 módulos).
-4. Para cada módulo, liste as aulas e um breve resumo do conteúdo de cada aula.
-5. Sugestão de exercícios práticos ou projetos.`;
+3. Estrutura de Módulos (Liste do Módulo 1 ao 10 ou mais).
+4. Para cada módulo, detalhe os tópicos das aulas e o que será ensinado.
+5. Sugestão de exercícios práticos ou projetos finais.`;
+
     } else if (type === 'EBOOK') {
-      prompt = `Atue como um autor best-seller e editor profissional.
-Crie o PLANEJAMENTO E O PRIMEIRO CAPÍTULO de um E-book sobre: "${topic}".
+      userTitle = `Criar E-book sobre: ${topic}`;
+
+      // Prompt para a Capa do Ebook
+      imagePrompt = `Crie uma imagem vertical formato capa de livro (ebook) sobre o título: "${topic}". Estilo: ${safeStyle}. Design profissional, best-seller. Sem texto complexo, apenas arte conceitual.`;
+
+      // Prompt para o Conteúdo do Ebook
+      textPrompt = `Atue como um autor best-seller e editor profissional.
+Crie o PLANEJAMENTO COMPLETO e o PRIMEIRO CAPÍTULO de um E-book sobre: "${topic}".
 Público-alvo: "${targetAudience}".
-Gênero/Estilo: "${style || 'Informativo e envolvente'}".
+Gênero/Estilo: "${safeStyle}".
+
+REQUISITO OBRIGATÓRIO: A estrutura do livro deve conter PELO MENOS 10 CAPÍTULOS.
 
 A resposta deve ser formatada em Markdown e incluir:
 1. Título e Subtítulo Sugeridos.
-2. Sumário Detalhado (Lista de capítulos com breves descrições).
+2. Sumário Detalhado (Liste Capítulo 1 até Capítulo 10 com descrições do que cada um aborda).
 3. Uma Introdução completa e engajadora.
-4. O CAPÍTULO 1 COMPLETO escrito no estilo solicitado.`;
+4. O CAPÍTULO 1 COMPLETO escrito no estilo solicitado (mínimo de 1000 palavras para este capítulo).`;
     }
 
-    onSubmit(prompt);
+    onSubmit(textPrompt, imagePrompt, userTitle);
     resetForm();
   };
 
@@ -89,7 +110,7 @@ A resposta deve ser formatada em Markdown e incluir:
               >
                 <AcademicCapIcon className="w-12 h-12 text-gray-300 group-hover:text-indigo-400 mb-3" />
                 <span className="text-lg font-medium text-gray-200 group-hover:text-white">Criar Curso</span>
-                <p className="text-xs text-gray-400 text-center mt-2">Estrutura completa, módulos e aulas.</p>
+                <p className="text-xs text-gray-400 text-center mt-2">Capa + Estrutura de 10 Módulos.</p>
               </button>
 
               <button
@@ -98,7 +119,7 @@ A resposta deve ser formatada em Markdown e incluir:
               >
                 <BookOpenIcon className="w-12 h-12 text-gray-300 group-hover:text-emerald-400 mb-3" />
                 <span className="text-lg font-medium text-gray-200 group-hover:text-white">Criar E-book</span>
-                <p className="text-xs text-gray-400 text-center mt-2">Título, sumário e primeiro capítulo.</p>
+                <p className="text-xs text-gray-400 text-center mt-2">Capa + Sumário de 10 Capítulos.</p>
               </button>
             </div>
           ) : (

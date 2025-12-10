@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: MessageRole.MODEL,
-      text: "Olá! Eu sou sua IA Universal. Como posso te ajudar hoje? Você pode me fazer perguntas, pedir para eu analisar uma imagem, criar imagens, ou usar o menu de ferramentas para criar Cursos e E-books.",
+      text: "Olá! Eu sou sua IA Universal. Como posso te ajudar hoje? Você pode me fazer perguntas, pedir para eu analisar uma imagem, criar imagens, ou usar o menu de ferramentas para criar Cursos e E-books completos (com capa e conteúdo).",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,9 +100,42 @@ const App: React.FC = () => {
     }
   };
 
-  const handleToolSubmit = (prompt: string) => {
+  // Função especial para lidar com a criação de Cursos/Ebooks (Gera Imagem -> Depois Texto)
+  const handleToolSubmit = async (textPrompt: string, imagePrompt: string, userTitle: string) => {
+    if (!apiKey) return;
+    
     setIsToolsModalOpen(false);
-    handleSend(prompt);
+    setIsLoading(true);
+
+    // 1. Adiciona mensagem do usuário
+    setMessages(prev => [...prev, {
+      role: MessageRole.USER,
+      text: userTitle
+    }]);
+
+    try {
+      // 2. Gera a Imagem (Capa)
+      const imageResponse = await runQuery(imagePrompt, apiKey);
+      
+      // Se deu erro na imagem, apenas adiciona o erro mas continua para o texto
+      setMessages(prev => [...prev, imageResponse]);
+
+      // 3. Gera o Texto (Conteúdo)
+      // Pequeno delay visual para parecer processamento sequencial
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const textResponse = await runQuery(textPrompt, apiKey);
+      setMessages(prev => [...prev, textResponse]);
+
+    } catch (error) {
+       console.error("Error in tool execution:", error);
+       setMessages(prev => [...prev, {
+         role: MessageRole.ERROR,
+         text: "Ocorreu um erro ao gerar o conteúdo solicitado."
+       }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!apiKey) {
@@ -126,6 +159,7 @@ const App: React.FC = () => {
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="text-xs text-gray-400 ml-2">Criando conteúdo...</span>
             </div>
           </div>
         )}
