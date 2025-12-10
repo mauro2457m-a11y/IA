@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Message, MessageRole } from './types';
 import { ChatBubble } from './components/ChatBubble';
@@ -5,16 +6,19 @@ import { InputBar } from './components/InputBar';
 import { runQuery } from './services/geminiService';
 import { SparklesIcon } from './components/icons/SparklesIcon';
 import { ApiKeyScreen } from './components/ApiKeyScreen';
+import { CreationModal } from './components/CreationModal';
 
 const App: React.FC = () => {
   const [apiKey, setApiKey] = useState<string | null>(localStorage.getItem('gemini-api-key'));
   const [messages, setMessages] = useState<Message[]>([
     {
       role: MessageRole.MODEL,
-      text: "Olá! Eu sou sua IA Universal. Como posso te ajudar hoje? Você pode me fazer perguntas, pedir para eu analisar uma imagem ou até mesmo gerar uma para você.",
+      text: "Olá! Eu sou sua IA Universal. Como posso te ajudar hoje? Você pode me fazer perguntas, pedir para eu analisar uma imagem, criar imagens, ou usar o menu de ferramentas para criar Cursos e E-books.",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isToolsModalOpen, setIsToolsModalOpen] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -96,6 +100,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleToolSubmit = (prompt: string) => {
+    setIsToolsModalOpen(false);
+    handleSend(prompt);
+  };
+
   if (!apiKey) {
     return <ApiKeyScreen onKeySubmit={handleKeySubmit} />;
   }
@@ -106,6 +115,7 @@ const App: React.FC = () => {
         <SparklesIcon className="w-6 h-6 text-indigo-400 mr-2" />
         <h1 className="text-xl font-bold text-gray-100">IA Universal</h1>
       </header>
+      
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
         {messages.map((msg, index) => (
           <ChatBubble key={index} message={msg} />
@@ -113,17 +123,28 @@ const App: React.FC = () => {
         {isLoading && (
           <div className="flex justify-start">
             <div className="flex items-center space-x-2 bg-gray-800 p-3 rounded-lg max-w-lg">
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse [animation-delay:-0.3s]"></div>
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse [animation-delay:-0.15s]"></div>
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </main>
-      <footer className="p-4 bg-gray-900/80 backdrop-blur-sm sticky bottom-0">
-        <InputBar onSend={handleSend} isLoading={isLoading} />
+
+      <footer className="p-4 bg-gray-900">
+        <InputBar 
+            onSend={handleSend} 
+            isLoading={isLoading}
+            onOpenTools={() => setIsToolsModalOpen(true)}
+        />
       </footer>
+
+      <CreationModal 
+        isOpen={isToolsModalOpen} 
+        onClose={() => setIsToolsModalOpen(false)} 
+        onSubmit={handleToolSubmit} 
+      />
     </div>
   );
 };
