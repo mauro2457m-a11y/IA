@@ -1,14 +1,15 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Message, MessageRole } from '../types';
 
 const API_KEY = process.env.API_KEY;
+let ai: GoogleGenAI | undefined;
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
+if (API_KEY) {
+  ai = new GoogleGenAI({ apiKey: API_KEY });
+} else {
+  console.error("API_KEY environment variable is not set.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const GENERATION_KEYWORDS = ['gere', 'crie uma imagem', 'desenhe', 'ilustre', 'faça uma imagem', 'gera', 'cria uma imagem'];
 
@@ -18,6 +19,13 @@ const isGenerationRequest = (prompt: string): boolean => {
 };
 
 export const runQuery = async (prompt: string, image?: { data: string; mimeType: string }): Promise<Message> => {
+  if (!ai) {
+    return {
+      role: MessageRole.ERROR,
+      text: "A chave da API do Google não está configurada. Verifique as variáveis de ambiente.",
+    };
+  }
+
   try {
     if (isGenerationRequest(prompt) && !image) {
       // Image Generation
