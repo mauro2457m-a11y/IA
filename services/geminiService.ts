@@ -78,12 +78,29 @@ export const runQuery = async (prompt: string, apiKey: string, image?: { data: s
           };
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    
+    // Tenta extrair a mensagem de erro, seja de um objeto Error ou de uma string JSON
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    let friendlyMessage = "Ocorreu um erro inesperado ao processar sua solicitação.";
+
+    // Verifica erros de cota (429)
+    if (rawMessage.includes('429') || rawMessage.includes('RESOURCE_EXHAUSTED') || rawMessage.includes('quota')) {
+        friendlyMessage = "⚠️ **Limite de uso atingido (Erro 429)**\n\nVocê atingiu o limite de requisições do plano gratuito do Google Gemini. Por favor, aguarde cerca de 1 minuto antes de tentar novamente.";
+    } 
+    // Verifica erros de segurança
+    else if (rawMessage.includes('SAFETY') || rawMessage.includes('blocked')) {
+        friendlyMessage = "⚠️ **Conteúdo Bloqueado**\n\nA IA recusou gerar o conteúdo por motivos de segurança. Tente reformular seu pedido.";
+    }
+    // Trata erros genéricos para não mostrar JSON bruto
+    else {
+        friendlyMessage = `Desculpe, ocorreu um erro técnico na comunicação com a IA. Tente novamente.`;
+    }
+
     return {
       role: MessageRole.ERROR,
-      text: `Ocorreu um erro ao comunicar com a IA: ${errorMessage}`,
+      text: friendlyMessage,
     };
   }
 };

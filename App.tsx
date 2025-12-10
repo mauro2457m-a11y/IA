@@ -125,12 +125,20 @@ const App: React.FC = () => {
       // 2. Gera a Imagem (Capa)
       const imageResponse = await runQuery(imagePrompt, apiKey);
       
-      // Se deu erro na imagem, apenas adiciona o erro mas continua para o texto
       setMessages(prev => [...prev, imageResponse]);
 
+      // Verifica se houve erro na imagem antes de prosseguir
+      if (imageResponse.role === MessageRole.ERROR) {
+          // Se for erro de cota, paramos por aqui para não piorar
+          if (imageResponse.text?.includes("429") || imageResponse.text?.includes("Limite")) {
+              setIsLoading(false);
+              return;
+          }
+      }
+
       // 3. Gera o Texto (Conteúdo)
-      // Pequeno delay visual para parecer processamento sequencial
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Aumentado delay para 2.5s para evitar atingir o limite de requisições por minuto (RPM)
+      await new Promise(resolve => setTimeout(resolve, 2500));
       
       const textResponse = await runQuery(textPrompt, apiKey);
       setMessages(prev => [...prev, textResponse]);
@@ -139,7 +147,7 @@ const App: React.FC = () => {
        console.error("Error in tool execution:", error);
        setMessages(prev => [...prev, {
          role: MessageRole.ERROR,
-         text: "Ocorreu um erro ao gerar o conteúdo solicitado."
+         text: "Ocorreu um erro ao processar a sequência de criação."
        }]);
     } finally {
       setIsLoading(false);
@@ -179,7 +187,7 @@ const App: React.FC = () => {
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              <span className="text-xs text-gray-400 ml-2">Criando conteúdo...</span>
+              <span className="text-xs text-gray-400 ml-2">Criando conteúdo (isso pode levar alguns segundos)...</span>
             </div>
           </div>
         )}
