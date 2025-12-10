@@ -5,6 +5,7 @@ import { ChatBubble } from './components/ChatBubble';
 import { InputBar } from './components/InputBar';
 import { runQuery } from './services/geminiService';
 import { SparklesIcon } from './components/icons/SparklesIcon';
+import { KeyIcon } from './components/icons/KeyIcon';
 import { ApiKeyScreen } from './components/ApiKeyScreen';
 import { CreationModal } from './components/CreationModal';
 
@@ -28,6 +29,13 @@ const App: React.FC = () => {
   const handleKeySubmit = (key: string) => {
     localStorage.setItem('gemini-api-key', key);
     setApiKey(key);
+  };
+
+  const handleChangeKey = () => {
+    if (window.confirm("Deseja alterar sua chave API? Isso irá remover a chave atual.")) {
+      localStorage.removeItem('gemini-api-key');
+      setApiKey(null);
+    }
   };
 
   useEffect(() => {
@@ -144,9 +152,21 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800/50 backdrop-blur-sm shadow-lg p-4 flex items-center justify-center sticky top-0 z-10">
-        <SparklesIcon className="w-6 h-6 text-indigo-400 mr-2" />
-        <h1 className="text-xl font-bold text-gray-100">IA Universal</h1>
+      <header className="bg-gray-800/50 backdrop-blur-sm shadow-lg p-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="w-8">
+            {/* Spacer to keep title centered */}
+        </div>
+        <div className="flex items-center">
+            <SparklesIcon className="w-6 h-6 text-indigo-400 mr-2" />
+            <h1 className="text-xl font-bold text-gray-100">IA Universal</h1>
+        </div>
+        <button 
+            onClick={handleChangeKey} 
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition-colors rounded-full hover:bg-gray-700"
+            title="Alterar Chave API"
+        >
+            <KeyIcon className="w-5 h-5" />
+        </button>
       </header>
       
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
